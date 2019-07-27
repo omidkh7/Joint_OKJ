@@ -6,7 +6,7 @@
 #include <sstream>
 #include <fstream>
 #include <Eigen/Sparse>
-//---
+//--- eigen library
 using namespace Eigen;
 typedef SparseMatrix<double> SparseMatrixXd;
 using namespace std;
