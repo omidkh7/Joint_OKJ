@@ -34,10 +34,10 @@ a = 1.0 # Variance
 b = 0.0  # mean
 G =( a*G+b ) # Transfering G to a  mean and sqrt(1/2^5) variance. 
 
-HIST_G=[]
-for i in range(np.shape(G)[0]):
-    for j in range(np.shape(G)[1]):
-        HIST_G.append(G[i][j])
+#HIST_G=[]
+#for i in range(np.shape(G)[0]):
+#    for j in range(np.shape(G)[1]):
+#        HIST_G.append(G[i][j])
     
 #plt.sca( axes[0][0] ) 
 #plt.hist(HIST_G,128,color='r',label='G')
@@ -52,7 +52,7 @@ print('Std F : ',np.std(F))
 print('Max Permeability : ',np.max(F))
 print('Min Permeability : ',np.min(F))
 #porosity should be in between 0.01 to 0.35
-Porosity =( ( (1/15) * np.log( F / np.min(F) ) ) + 0.01 ) # alpha = 20.0 comes form empirical data
+#Porosity =( ( (1/15) * np.log( F / np.min(F) ) ) + 0.01 ) # alpha = 20.0 comes form empirical data
 Porosity = [[1.0 for j in range(m)]for i in range(n)] #kam
 print('average Porosity: ',np.mean(Porosity))
 print('Std Porosity : ',np.std(Porosity))
@@ -61,11 +61,11 @@ print('Min porosity : ',np.min(Porosity))
 
 #plt.sca( axes[0][1] )
 #plt.title('porosity')
-HIST_Porosity=[]
+#HIST_Porosity=[]
 
-for i in range(np.shape(Porosity)[0]):
-    for j in range(np.shape(Porosity)[1]):
-        HIST_Porosity.append(Porosity[i][j]) 
+#for i in range(np.shape(Porosity)[0]):
+#    for j in range(np.shape(Porosity)[1]):
+#        HIST_Porosity.append(Porosity[i][j]) 
         
 #plt.hist(HIST_Porosity,128,color='b',label='F')
 
@@ -76,17 +76,17 @@ for i in range(np.shape(Porosity)[0]):
 
 #plt.sca( axes[0][2] )
 #plt.title('Permeability')       
-HIST_F=[]
-beshmore = 0
-for i in range(np.shape(F)[0]):
-    for j in range(np.shape(F)[1]):
-        if (F[i][j] > 10):
-            beshmore += 1
-            F[i][j] = np.random.uniform(low= 5.0,high= 10.0)
-        HIST_F.append(F[i][j]) 
+#HIST_F=[]
+#beshmore = 0
+#for i in range(np.shape(F)[0]):
+#    for j in range(np.shape(F)[1]):
+#        if (F[i][j] > 10):
+#            beshmore += 1
+#            F[i][j] = np.random.uniform(low= 5.0,high= 10.0)
+#        HIST_F.append(F[i][j]) 
 
 
-print( 'fraction of number bigger than sth: ' ,(beshmore / (n*m*2)) * 100 )
+#print( 'fraction of number bigger than sth: ' ,(beshmore / (n*m*2)) * 100 )
 #plt.hist(HIST_F,128,color='b',label='F')
 
 #plt.sca( axes[1][2] ) 
@@ -95,13 +95,13 @@ print( 'fraction of number bigger than sth: ' ,(beshmore / (n*m*2)) * 100 )
 
 
 #plt.sca( axes[0][3] )
-HIST_Per_pos=[]
+#HIST_Per_pos=[]
 
-Final = np.zeros((n,m))
-for i in range(np.shape(Final)[0]):
-    for j in range(np.shape(Final)[1]):
-        Final[i][j] = F[i][j] / Porosity[i][j]
-        HIST_Per_pos.append( Final[i][j] ) 
+#Final = np.zeros((n,m))
+#for i in range(np.shape(Final)[0]):
+#    for j in range(np.shape(Final)[1]):
+#        Final[i][j] = F[i][j] / Porosity[i][j]
+#        HIST_Per_pos.append( Final[i][j] ) 
         
 #plt.hist(HIST_Per_pos,128,color='b',label='F')
 
