@@ -53,14 +53,16 @@ vector <double> ReadInDoubles( const string& filename )
 //---
 int main()
 {
-	const unsigned int ngrid = 501;
+//	const int nfreq = 100;
+	const unsigned int nstep = 100000;
+	const unsigned int ngrid = 4001; //501;
 	const double L = 1.0; //--- Distance between the center of a site to it's neighbor
     const double A = 1.0; //--- Area of interface between two neighbors
     const double V = 1.0; //--- Volume of a site
-    const double K = 1e-16; //--- Characteristic permeability (unit : m^2)
-    const double alpha = 1e-8; //--- effective compressibility (unit :  1/Pa )
-	const double Viscosity = 1e-4; //---  unit( Pa.sec ) water viscosity in 100 Celsius degrees
-	const double dt =  16.0 ; //--- time discretization (dimensionless)
+    const double K = 1.0; //1e-16; //--- Characteristic permeability (unit : m^2)
+    const double alpha = 1.0;//1e-8; //--- effective compressibility (unit :  1/Pa )
+	const double Viscosity = 1.0; //1e-4; //---  unit( Pa.sec ) water viscosity in 100 Celsius degrees
+	const double dt =  0.1;//kam //16.0 ; //--- time discretization (dimensionless)
 	FILE *fptr;
 	//--- solid part
 	const unsigned int index_injection = ( ngrid / 2 ) * ngrid + ngrid / 2;
@@ -95,7 +97,7 @@ int main()
     fprintf( f_pressure, "#ITIME\tMSD\n" );
     
     FILE *f_fracture = fopen("fracture.txt","w");
-    fprintf( f_fracture, "#ITIME\tRad\tMSD\tRMS\n" );
+    fprintf( f_fracture, "#ITIME\tR\tMAG\n"); //MSD\tRMS\n" );
     //--
     //--
     initialize( &K_x_change, nsize ); //-- this will set all the values of this equall to zero
@@ -128,10 +130,14 @@ int main()
 	}
     unsigned int Number_ofevents = 0;
     unsigned int itime = 0;
-    while (Number_ofevents != 1000) {
-        if (itime % 1000 == 0) {
+//    while (Number_ofevents != 1000) {
+//		rho[ index_injection ] = 1.0;
+//		rho_updated[ index_injection ] = 1.0;
+	  for( unsigned int istep=0;istep<nstep;istep++){
+//    while (Number_ofevents != 1) { //
+//        if (itime % 1000 == 0) {
             printf( "itime = %d\n", itime);
-        }
+//        }
         //--- BC
 		rho[ index_injection ] = 1.0;
 		rho_updated[ index_injection ] = 1.0;
@@ -149,10 +155,10 @@ int main()
                 
 				if( index == index_injection )
 				{
-                    permeability_y[ index ]   = 20.0 ;
-                    permeability_x[ index ]   = 20.0 ;
-                    permeability_y[ index_N ] = 20.0 ;
-                    permeability_x[ index_W ] = 20.0 ;
+//kam                    permeability_y[ index ]   = 20.0 ;
+//                    permeability_x[ index ]   = 20.0 ;
+//                    permeability_y[ index_N ] = 20.0 ;
+//                    permeability_x[ index_W ] = 20.0 ;
 					index++;
 					continue;
 				}
@@ -174,14 +180,21 @@ int main()
                 double q_W =  K_W * p_W;
 				//---
 				rho_updated[ index ] = rho[ index ] + (dimensionless_number) * (q_E + q_N + q_S + q_W);
+//				if((dimensionless_number) * (q_E + q_N + q_S + q_W))
+//					printf("dp=%e\n",(dimensionless_number) * (q_E + q_N + q_S + q_W)); 
 				//---
 				index++;
         
 			}
 		}
         //--- initialize
+		double psum = 0.0;	
         for( unsigned int index = 0; index < nsize; index++ )
+		{
             rho[ index ] = rho_updated[ index ] ;
+			psum += rho_updated[ index ];
+		}
+//		printf( "%e\t%e\n", itime * dt, psum );
         //--- yield function
         unsigned int time_internal = 0, avalanche_area = 0, avalanche_size = 0;
         double  energy_rel = 0.0;
@@ -189,17 +202,22 @@ int main()
         while( isFailed( &tau, &S, &rho, nsize) )
         {
             //printf( "time_internal = %d\n", time_internal);
-            unsigned int  i = 0 , index_w, index_e, index_n, index_s;
-            for( int Node_i = 0; Node_i < ngrid; Node_i++ )
-            {
-                for( int Node_j = 0; Node_j < ngrid; Node_j++ )
-                {
+//            unsigned int  i = 0 , index_w, index_e, index_n, index_s;
+//            for( int Node_i = 0; Node_i < ngrid; Node_i++ )
+//            {
+//                for( int Node_j = 0; Node_j < ngrid; Node_j++ )
+//                {
+			for( unsigned int i = 0; i < nsize; i++ )
+			{ 
+					force_shear[ i ] = 0.0;
                     if( tau[ i ] + rho[ i ] > S[ i ] ){
                         failure[ i ] = 1;
                         avalanche_size += 1;
                         energy_rel += tau[i];
                         force_shear[ i ] = tau[ i ]; //--- effective force;
-                        //-- if the site fail, just for one time, the permeability corresponding to that site (four bonds) would increase by a factor 200
+					}
+			}
+/**                        //-- if the site fail, just for one time, the permeability corresponding to that site (four bonds) would increase by a factor 200
                         getIndex( ngrid, Node_i, Node_j - 1  < 0 ? Node_j - 1 + ngrid : Node_j - 1 , &index_w );
                         getIndex( ngrid, Node_i, ( Node_j + 1 ) % ngrid, &index_e );
                         getIndex( ngrid, ( Node_i + 1 ) % ngrid, Node_j, &index_s );
@@ -238,7 +256,7 @@ int main()
                 i++;
               }
             }
-            d_tau = smat * force_shear;
+**/            d_tau = smat * force_shear;
             for( unsigned int i = 0; i < nsize; i++ ){
                 tau[ i ] = tau[ i ] + d_tau[ i ] ;
                 }
@@ -264,7 +282,7 @@ int main()
             double X_com = 0.0 ;
             double Y_com = 0.0 ;
             double Number = 0.0 ;
-            double r3 = 0.0 ;
+            double r3 = 0.0, RSQ=0.0 ;
             double denominatorR = 0.0 ;
             unsigned int IND = 0;
             for( int xx = 0; xx < ngrid; xx++ )
@@ -276,18 +294,20 @@ int main()
                         int YYY = ((ngrid - 1 ) / 2 ) - (yy);
                         X_com += XXX;
                         Y_com += YYY;
-                        float R = sqrt(XXX * XXX + YYY * YYY);
-                        r3 += R * R * R ;
-                        denominatorR += R ;
+                        RSQ += XXX * XXX + YYY * YYY;
+//                        float R = sqrt(XXX * XXX + YYY * YYY);
+//                        r3 += R * R * R ;
+//                        denominatorR += R ;
                         Number += 1.0;
                     }
                     IND++;
                 }
             }
-            fprintf( f_fracture, "%d\t%f\t%e\t%e\n", itime,sqrt((X_com * X_com)/(Number * Number)+(Y_com * Y_com)/(Number * Number)),r3/denominatorR,sqrt(r3/denominatorR));
+            fprintf( f_fracture, "%e\t%e\t%e\n", itime*dt,sqrt(RSQ/Number), 0.04*avalanche_area);// (X_com * X_com)/(Number * Number)+(Y_com * Y_com)/(Number * Number)),r3/denominatorR,sqrt(r3/denominatorR));
             fflush( f_fracture );
         }
         //--- Mean-squared-Displacement for pressure profile
+//		if( itime % nfreq == 0 ){
         if( avalanche_area > 0  ){
             double r3p = 0.0 ;
             double denominator = 0.0 ;
@@ -303,21 +323,25 @@ int main()
                         double r = sqrt(X * X + Y * Y);
                         r3p += r * r * r * rho[ index];
                         denominator += r * rho[ index];
+						if(XX==YY) 
+	            			fprintf( f_pressure, "%e\t%e\t%e\n",r, rho[ index], itime * dt );//itime, r3p / denominator );
                     }
                     index++;
                 }
             }
-            fprintf( f_pressure, "%d\t%e\n",itime, r3p / denominator );
+			fprintf( f_pressure, "\n");
+//            fprintf( f_pressure, "%d\t%e\n",itime, r3p / denominator );
             fflush( f_pressure );
         }
         //--- plot fluid pressure
+//		if( itime % nfreq == 0 ){
         if( avalanche_area > 0  ){
             fptr = fopen( "vmd.xyz", "a" );
             fprintf( fptr, "%d\n", nsize );
             fprintf( fptr, "ITIME=%d\n", itime );
             for( unsigned int index = 0; index < nsize; index++ )
                 
-                fprintf( fptr, "%d\t%d\t%d\t%e\n", index, index / ngrid , index % ngrid, fabs( rho[ index ] ) > 0.0 ? rho[ index ] : 0.0 );
+                fprintf( fptr, "%d\t%d\t%d\t%e\n", index, index / ngrid , index % ngrid, fabs( rho[ index ] ) > 1.e-15 ? rho[ index ] : 0.0 );
             fclose( fptr );
         }
         //--- plot fractured sites
